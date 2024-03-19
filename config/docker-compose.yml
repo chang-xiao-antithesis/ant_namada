@@ -1,0 +1,39 @@
+# Namada localnet single validator setup
+# podman-compose up
+version: "3.8"
+
+services:
+  genesis:
+    container_name: genesis
+    hostname: genesis
+    image: namada-genesis:v0.31.9
+    volumes:
+      - ./genesis/:/chain_data
+      - ./container_ready/:/container_ready
+    networks:
+      namada-net:
+        ipv4_address: 30.0.0.11
+  validator1: # ledger node?
+    container_name: validator1
+    hostname: validator1
+    image: namada:v0.31.9
+    environment:
+      - NAMADA_TOKIO_THREADS=4
+      - NAMADA_RAYON_THREADS=4
+      - NAMADA_LOG=info
+      # - NAMADA_LOG_FMT=json
+      - CMT_LOG_LEVEL=info
+    volumes:
+      - ./genesis:/genesis
+      - ./container_ready/:/container_ready
+      - ./namada.sh:/entrypoint.sh
+    entrypoint: /entrypoint.sh
+    networks:
+      namada-net:
+        ipv4_address: 30.0.0.12
+networks:
+  namada-net:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 30.0.0.0/24
